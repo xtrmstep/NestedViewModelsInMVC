@@ -1,0 +1,60 @@
+﻿@model NestedViewModelsInMVC.Models.Person
+
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script>
+    var person = {
+        "Name": "Person name",
+        "Addr": {
+            "Location": "Address location"
+        }
+    };
+
+    function SendData() {
+        $.post("@Url.Action("Index")", person);
+    }
+
+    function SendData_postify() {
+        $.post("@Url.Action("Index")", $.postify(person));
+    }
+
+    $.postify = function(value) {
+        var result = {};
+
+        var buildResult = function(object, prefix) {
+            for (var key in object) {
+
+                var postKey = isFinite(key)
+                    ? (prefix != "" ? prefix : "") + "[" + key + "]"
+                    : (prefix != "" ? prefix + "." : "") + key;
+
+                switch (typeof (object[key])) {
+                case "number":
+                case "string":
+                case "boolean":
+                    result[postKey] = object[key];
+                    break;
+
+                case "object":
+                    if (object[key].toUTCString)
+                        result[postKey] = object[key].toUTCString().replace("UTC", "GMT");
+                    else {
+                        buildResult(object[key], postKey != "" ? postKey : key);
+                    }
+                }
+            }
+        };
+
+        buildResult(value, "");
+
+        return result;
+    };
+</script>
+
+<button type="button" onclick=" SendData() ">Send clear JSON</button><br/>
+<button type="button" onclick=" SendData_postify() ">Send JSON after postify()</button>
+<br/>
+@using(Html.BeginForm()){
+    @Html.HiddenFor(m => m.Name)
+    @Html.HiddenFor(m => m.Addr.Location)
+    <button type="submit">Submit MVC form</button>
+}
